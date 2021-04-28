@@ -10,6 +10,8 @@ public class Constants {
     public static final int RIGHT = 3;
     public static final int RESET = 4;
     public static final int RESET_BOARD = 5;
+    public static final int DETECT_FULL_ROW = 6;
+    public static final int ROTATE = 7;
 
     public static final int DRAW_BLOCK = 1;
 

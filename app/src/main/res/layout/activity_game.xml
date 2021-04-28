@@ -32,10 +32,17 @@
                 android:gravity="center"
                 android:text="Next" />
 
+            <TextView android:id="@+id/curr_score_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="0" />
+
             <com.example.tetrisdemo.NewBlockView
                 android:id="@+id/next_block"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
+
         </LinearLayout>
     </LinearLayout>
 
@@ -53,6 +60,14 @@
             android:layout_weight="1"
             android:background="@color/button_color"
             android:text="Влево" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/buttonRotate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@color/button_color"
+            android:text="Повернуть" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/buttonRight"
