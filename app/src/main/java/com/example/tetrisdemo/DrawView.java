@@ -21,6 +21,9 @@ class DrawView extends View {
     private int currentY;
     private List<Coordinate> blockCoordinates = new ArrayList<>();
 
+    private int currentFigure;
+    private int rotated;
+
     public DrawView(Context context) {
         super(context);
     }
@@ -174,6 +177,82 @@ class DrawView extends View {
         return false;
     }
 
+    public boolean checkRotate() {
+
+        List<Coordinate> nextCoordinates = Figure.getFigure(this.currentFigure,
+                (this.rotated + 1) % 4);
+        for (Coordinate coordinate : nextCoordinates) {
+            if (this.currentFigure == 5) {
+                if (this.rotated == 0 || this.rotated == 2) {
+                    coordinate.setX(coordinate.getX() + this.currentX - 1);
+                    coordinate.setY(coordinate.getY() + this.currentY + 1);
+                } else {
+                    coordinate.setX(coordinate.getX() + this.currentX + 1);
+                    coordinate.setY(coordinate.getY() + this.currentY - 1);
+                }
+            } else {
+                coordinate.setX(coordinate.getX() + this.currentX);
+                coordinate.setY(coordinate.getY() + this.currentY);
+            }
+        }
+        for (Coordinate coordinate : nextCoordinates) {
+            if (this.checkCurrentCoordinates(coordinate)) {
+                continue;
+            } else if (coordinate.getX() < 0 ||
+                    coordinate.getX() > 19 ||
+                    coordinate.getY() < 0 ||
+                    coordinate.getY() > 9) {
+                return false;
+            } else if (this.field[coordinate.getX()][coordinate.getY()]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public void rotate() {
+        List<Coordinate> nextCoordinates = Figure.getFigure(this.currentFigure,
+                (this.rotated + 1) % 4);
+        for (Coordinate coordinate : nextCoordinates) {
+            if (this.currentFigure == 5) {
+                if (this.rotated == 0 || this.rotated == 2) {
+                    coordinate.setX(coordinate.getX() + this.currentX - 1);
+                    coordinate.setY(coordinate.getY() + this.currentY + 1);
+                } else {
+                    coordinate.setX(coordinate.getX() + this.currentX + 1);
+                    coordinate.setY(coordinate.getY() + this.currentY - 1);
+                }
+            } else {
+                coordinate.setX(coordinate.getX() + this.currentX);
+                coordinate.setY(coordinate.getY() + this.currentY);
+            }
+        }
+
+        for (Coordinate coordinate : this.blockCoordinates) {
+            this.field[coordinate.getX()][coordinate.getY()] = false;
+        }
+
+        for (Coordinate coordinate : nextCoordinates) {
+            this.field[coordinate.getX()][coordinate.getY()] = true;
+        }
+
+        this.blockCoordinates = nextCoordinates;
+
+        if (this.currentFigure == 5) {
+            if (this.rotated == 0 || this.rotated == 2) {
+                this.currentX -= 1;
+                this.currentY += 1;
+            } else {
+                this.currentX += 1;
+                this.currentY -= 1;
+            }
+        }
+        this.rotated = (this.rotated + 1) % 4;
+
+        this.invalidate();
+    }
+
     public void reset() {
         for (int row = 0; row < 20; row++) {
             for (int column = 0; column < 10; column++) {
@@ -183,17 +262,55 @@ class DrawView extends View {
 
         this.currentX = 0;
         this.currentY = 3;
+        this.currentFigure = 0;
+        this.rotated = 0;
         this.blockCoordinates.clear();
         this.invalidate();
     }
 
     public void pushBlock(int type) {
+        this.currentFigure = type;
         this.currentX = 0;
         this.currentY = 3;
+        this.rotated = 0;
         this.blockCoordinates.clear();
         for (Coordinate coordinate : Figure.getFigure(type, 0)) {
             this.field[this.currentX + coordinate.getX()][this.currentY + coordinate.getY()] = true;
             this.blockCoordinates.add(new Coordinate(this.currentX + coordinate.getX(), this.currentY + coordinate.getY()));
         }
+    }
+
+    public int checkRowsCollision() {
+        int count = 0;
+        while (cleanRow()) {
+            count++;
+        }
+
+        return count;
+    }
+
+    private boolean cleanRow() {
+
+        for (int i = 19; i >= 0; i--) {
+            boolean canEliminate = true;
+            for (int j = 0; j < 10; j++) {
+                canEliminate = canEliminate && this.field[i][j];
+            }
+
+            if (canEliminate) {
+                for (int row = i; row >= 1; row--) {
+                    for (int column = 0; column < 10; column++) {
+                        this.field[row][column] = this.field[row - 1][column];
+                    }
+                }
+                for (int column = 0; column < 10; column++) {
+                    this.field[0][column] = false;
+                }
+
+                return true;
+            }
+        }
+
+        return false;
     }
 }
