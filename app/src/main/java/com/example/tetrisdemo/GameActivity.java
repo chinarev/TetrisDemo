@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -41,11 +42,15 @@ public class GameActivity extends AppCompatActivity {
     private Timer timer;
     private int currentScore = 0;
     private TextView curr_score_view;
+    private ProgressBar progressBarSensors;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        progressBarSensors = findViewById(R.id.progressBarSensors);
+        progressBarSensors.setVisibility(ProgressBar.VISIBLE);
 
         this.drawView = findViewById(R.id.game_activity);
         this.nextBlockView = findViewById(R.id.next_block);
@@ -76,7 +81,6 @@ public class GameActivity extends AppCompatActivity {
         this.findViewById(R.id.buttonRight).setOnClickListener(onClickListenerRight);
         this.findViewById(R.id.buttonRotate).setOnClickListener(onClickListenerRotate);
 
-        runGame();
     }
 
     public void runGame() {
@@ -106,7 +110,9 @@ public class GameActivity extends AppCompatActivity {
                 case Constants.START:
                     GameActivity.this.generateNextBlock();
                     GameActivity.this.pushNextBlock();
+                    System.out.println("START BEFOR TIMER");
                     GameActivity.this.setTimer();
+                    System.out.println("START");
                     break;
 
                 case Constants.DEFAULT_DOWN:
@@ -131,6 +137,7 @@ public class GameActivity extends AppCompatActivity {
                             GameActivity.this.setTimer();
                         }
                     }
+                    System.out.println("DOWN");
                     break;
 
                 case Constants.LEFT:
@@ -157,6 +164,7 @@ public class GameActivity extends AppCompatActivity {
                     GameActivity.this.gameOver();
                     GameActivity.this.currentScore = 0;
                     GameActivity.this.curr_score_view.setText("0");
+                    System.out.println("RESET");
                     break;
 
                 case Constants.RESET_BOARD:
@@ -190,6 +198,7 @@ public class GameActivity extends AppCompatActivity {
                 System.gc();
             }
         }, 1000, 400);
+        System.out.println("SET TIMER");
     }
 
     private void gameOver() {
@@ -261,13 +270,26 @@ public class GameActivity extends AppCompatActivity {
     double[] arr_z_double_input = new double[1_000_000];
     double[] arr_z_double_output = new double[1_000_000];
 
+    boolean sensorsReady = false;
+
     public void onResume() {
         super.onResume();
         api = Api.getApi(this, new DataListener() {
             @Nullable
             @Override
             public ConnectedListener getConnectedListener() {
-                return null;
+
+                ConnectedListener connectedListener = new ConnectedListener() {
+                    @Override
+                    public void onConnected(boolean b) {
+                       if (sensorsReady) {
+                           progressBarSensors.setVisibility(ProgressBar.INVISIBLE);
+                           runGame();
+                       }
+                       System.out.println("ON CONNECTED GAME");
+                    }
+                };
+                return connectedListener;
             }
 
             @Nullable
@@ -283,6 +305,10 @@ public class GameActivity extends AppCompatActivity {
                 RawListener rawListener = new RawListener() {
                     @Override
                     public void onGetAcc(@NotNull Coordinates coordinates) {
+                        if (coordinates.getX() != 0) {
+                            sensorsReady = true;
+                        }
+
                         arr_x_double_input[count_acc_x] = coordinates.getX();
                         arr_y_double_input[count_acc_x] = coordinates.getY();
                         arr_z_double_input[count_acc_x] = coordinates.getZ();
@@ -305,6 +331,7 @@ public class GameActivity extends AppCompatActivity {
                                 arr_y.add(y);
                                 z = vz * dt;
                                 arr_z.add(z);
+
                             }
 
                         }
