@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">TetrisDemo</string>
+    <string name="textDown">Вниз</string>
+    <string name="textRotate">Повернуть</string>
+    <string name="textRight">Вправо</string>
+    <string name="textLeft">Влево</string>
 </resources>

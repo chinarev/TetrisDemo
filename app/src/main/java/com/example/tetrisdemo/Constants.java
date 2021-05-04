@@ -1,9 +1,6 @@
 package com.example.tetrisdemo;
 
 public class Constants {
-    public static float width;
-    public static float height;
-
     public static final int START = 0;
     public static final int DEFAULT_DOWN = 1;
     public static final int LEFT = 2;
@@ -12,6 +9,7 @@ public class Constants {
     public static final int RESET_BOARD = 5;
     public static final int DETECT_FULL_ROW = 6;
     public static final int ROTATE = 7;
+    public static final int FAST_DOWN = 8;
 
     public static final int DRAW_BLOCK = 1;
 

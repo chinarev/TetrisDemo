@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.view.View;
@@ -18,15 +19,10 @@ public class NewBlockView extends View {
 
     private boolean[][] field = new boolean[2][4];
 
-    private Handler handler = new Handler() {
+    private final Handler handler =new Handler(Looper.myLooper()) {
         public void handleMessage(Message message) {
-            switch (message.what) {
-                case Constants.DRAW_BLOCK:
-                    NewBlockView.this.invalidate();
-                    break;
-
-                default:
-                    break;
+            if (message.what == Constants.DRAW_BLOCK) {
+                NewBlockView.this.invalidate();
             }
         }
     };

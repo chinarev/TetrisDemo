@@ -1,5 +1,6 @@
 package com.example.tetrisdemo;
 
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -77,9 +78,17 @@ public class GameActivity extends AppCompatActivity {
             }
         };
 
+        View.OnClickListener onClickListenerDown = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                moveDown();
+            }
+        };
+
         this.findViewById(R.id.buttonLeft).setOnClickListener(onClickListenerLeft);
         this.findViewById(R.id.buttonRight).setOnClickListener(onClickListenerRight);
         this.findViewById(R.id.buttonRotate).setOnClickListener(onClickListenerRotate);
+        this.findViewById(R.id.buttonDown).setOnClickListener(onClickListenerDown);
 
     }
 
@@ -93,6 +102,15 @@ public class GameActivity extends AppCompatActivity {
 
     public void moveLeft() {
         new Thread(() -> GameActivity.this.mHandler.sendEmptyMessage(Constants.LEFT)).start();
+    }
+
+    private void moveDown() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                GameActivity.this.mHandler.sendEmptyMessage(Constants.FAST_DOWN);
+            }
+        }).start();
     }
 
     private void rotate() {
@@ -155,6 +173,14 @@ public class GameActivity extends AppCompatActivity {
                 case Constants.ROTATE:
                     if (GameActivity.this.drawView.checkRotate()) {
                         GameActivity.this.drawView.rotate();
+                    }
+                    break;
+
+                case Constants.FAST_DOWN:
+                    if (GameActivity.this.drawView.checkDownCollision()) {
+                        GameActivity.this.drawView.fallDown();
+                    } else {
+                        GameActivity.this.drawView.checkRowsCollision();
                     }
                     break;
 
@@ -231,9 +257,10 @@ public class GameActivity extends AppCompatActivity {
     static final float ALPHA = 0.2f;
 
     int count = 0;
-    int count_acc_x = 0;
     double[] vel_input_x = new double[1_000_000];
     double[] vel_out_x = new double[1_000_000];
+    double[] vel_input_z = new double[1_000_000];
+    double[] vel_out_z = new double[1_000_000];
 
     protected double[] lowPass(double[] input, double[] output) {
         if (output == null) return input;
@@ -245,31 +272,39 @@ public class GameActivity extends AppCompatActivity {
         return output;
     }
 
-    static final float kFilteringFactor = 0.1f;
+    protected ArrayList<Double> lowPass2(ArrayList<Double> input, ArrayList<Double> output) {
+        if (output == null) return input;
 
-    double vx = 0.0;
-    double dt = 0.0;
-    double vz = 0.0;
-    double vy = 0.0;
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
+        for (int i = 0; i < input.size(); i++) {
+            //output[i] = output[i] + ALPHA * (input[i] - output[i]);
+            output.add(i, (output.get(i) + ALPHA * (input.get(i) - output.get(i))));
+        }
+        return output;
+    }
 
     double bias;
     boolean wasRotated = false;
     boolean wasMoved = false;
-    ArrayList<Double> arr_x = new ArrayList<>();
-    ArrayList<Double> arr_y = new ArrayList<>();
-    ArrayList<Double> arr_z = new ArrayList<>();
+
+    double initial_speed = 0;
+    double new_speed = 0;
     ArrayList<Long> arr_time = new ArrayList<>();
+    long time;
+    int count_speed = 0;
+    double[] acc_x = new double[1_000_000];
+    double[] acc_x_with_Kalman = new double[1_000_000];
+    double acc;
+    //double[] initial_x = new double[1_000_000];
+    //double[] new_x = new double[1_000_000];
+    double initial_x = 0;
+    double new_x = 0;
+    //ArrayList<Double> initial_x = new ArrayList<>();
+    //ArrayList<Double> new_x = new ArrayList<>();
+    double dx;
+    long dt = 0;
 
-    double[] arr_x_double_input = new double[1_000_000];
-    double[] arr_x_double_output = new double[1_000_000];
-    double[] arr_y_double_input = new double[1_000_000];
-    double[] arr_y_double_output = new double[1_000_000];
-    double[] arr_z_double_input = new double[1_000_000];
-    double[] arr_z_double_output = new double[1_000_000];
-
+    ArrayList<Double> mass_x = new ArrayList<>();
+    ArrayList<Double> mass_x_with_lowFilter = new ArrayList<>();
     boolean sensorsReady = false;
 
     public void onResume() {
@@ -282,11 +317,11 @@ public class GameActivity extends AppCompatActivity {
                 ConnectedListener connectedListener = new ConnectedListener() {
                     @Override
                     public void onConnected(boolean b) {
-                       if (sensorsReady) {
-                           progressBarSensors.setVisibility(ProgressBar.INVISIBLE);
-                           runGame();
-                       }
-                       System.out.println("ON CONNECTED GAME");
+                        if (sensorsReady) {
+                            progressBarSensors.setVisibility(ProgressBar.INVISIBLE);
+                            runGame();
+                        }
+                        System.out.println("ON CONNECTED GAME");
                     }
                 };
                 return connectedListener;
@@ -305,38 +340,53 @@ public class GameActivity extends AppCompatActivity {
                 RawListener rawListener = new RawListener() {
                     @Override
                     public void onGetAcc(@NotNull Coordinates coordinates) {
+                        time = 0;
                         if (coordinates.getX() != 0) {
                             sensorsReady = true;
                         }
 
-                        arr_x_double_input[count_acc_x] = coordinates.getX();
-                        arr_y_double_input[count_acc_x] = coordinates.getY();
-                        arr_z_double_input[count_acc_x] = coordinates.getZ();
-
-                        arr_x_double_output = lowPass(arr_x_double_input, arr_x_double_output);
-                        arr_y_double_output = lowPass(arr_y_double_input, arr_y_double_output);
-                        arr_z_double_output = lowPass(arr_z_double_input, arr_z_double_output);
-
                         arr_time.add(System.currentTimeMillis());
-                        if (count_acc_x != 0) {
-                            if (arr_x_double_input[count_acc_x] != arr_x_double_input[count_acc_x - 1]) {
-                                dt = (arr_time.get(count_acc_x) - arr_time.get(count_acc_x - 1)) / 1000.0;
-                                //dt = time_1 - time_2;
-                                vx = arr_x_double_output[count_acc_x] * dt;
-                                vy = arr_y_double_output[count_acc_x] * dt;
-                                vz = arr_z_double_output[count_acc_x] * dt;
-                                x = vx * dt;
-                                arr_x.add(x);
-                                y = vy * dt;
-                                arr_y.add(y);
-                                z = vz * dt;
-                                arr_z.add(z);
+                        if (count_speed == 0) mass_x_with_lowFilter.add(0.0);
 
-                            }
+                        //if (dt != 0) {
+                        initial_speed = new_speed;
+                        //acc_x.add(coordinates.getX());
+                        acc_x[count_speed] = coordinates.getX();
+                        acc_x_with_Kalman = lowPass(acc_x, acc_x_with_Kalman);
+                        System.out.println("acc_x_with_Kalman : " + acc_x_with_Kalman[count_speed]);
+                        System.out.println("acc_x" + acc_x[count_speed]);
+                        new_speed = initial_speed + acc_x_with_Kalman[count_speed] * dt;
+                        //new_speed = initial_speed + coordinates.getX() * dt;
 
+                        System.out.println("initial speed: " + initial_speed);
+                        System.out.println("new speed: " + new_speed);
+                        System.out.println("time mass: " + arr_time);
+                        System.out.println("dt :" + dt);
+
+                        initial_x = new_x;
+                        dx = (initial_speed + new_speed) / 2 * dt;
+                        new_x = (initial_x + dx) / 1000;
+                        //new_x = (initial_x + dx);
+                        mass_x.add(new_x);
+
+                        //mass_x_with_lowFilter = lowPass2(mass_x, mass_x_with_lowFilter);
+                        System.out.println("X: " + mass_x);
+                        //System.out.println("x_filter: " + mass_x_with_lowFilter);
+                        if (mass_x.get(count_speed) > 30) {
+                            moveRight();
+                        }
+                        if (mass_x.get(count_speed) < -30) {
+                            moveLeft();
+                        }
+                        //}
+
+
+                        if (count_speed != 0) {
+                            dt = arr_time.get(count_speed) - arr_time.get(count_speed - 1);
                         }
 
-                        count_acc_x++;
+                        count_speed++;
+
 
                         bias = Math.atan((coordinates.getZ() * (-1)) / (Math.sqrt(Math.pow(coordinates.getX(), 2) + Math.pow(coordinates.getY(), 2)))) * (180 / Math.PI);
                         if (bias > 30 && !wasRotated) {
@@ -368,9 +418,9 @@ public class GameActivity extends AppCompatActivity {
 
                         wasMoved = false;
 
-                        //if (vel_out_z[count] < -10) {
-                        //rotate();
-                        //}
+                        if (vel_out_z[count] < -10) {
+                            rotate();
+                        }
 
 //                        if (count != 0) {
 //                            time_1 = (vel_input_z[count] - vel_input_z[count - 1]) / acc_storage_X.get(count);
@@ -378,7 +428,7 @@ public class GameActivity extends AppCompatActivity {
 //                            arr_S.add(S);
 //                        }
 
-//                        count++;
+                        count++;
 
 
                     }
