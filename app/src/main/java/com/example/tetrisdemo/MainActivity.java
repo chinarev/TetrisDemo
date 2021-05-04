@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -30,11 +31,12 @@ import com.softwarecountry.movesensegamelib.listeners.SideProgressListener;
 
 import org.jetbrains.annotations.Nullable;
 
-public class MainActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback{
+public class MainActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
 
     private Api api;
     private ProgressBar progressBarScan;
     private TextView text;
+    private Button buttonStartNewGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,18 +45,17 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
         setContentView(R.layout.activity_main);
 
         progressBarScan = findViewById(R.id.progressBarScan);
-        progressBarScan.setVisibility(ProgressBar.VISIBLE);
 
         View.OnClickListener onClickListenerStart = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent=new Intent(MainActivity.this, GameActivity.class);
+                Intent intent = new Intent(MainActivity.this, GameActivity.class);
                 startActivity(intent);
             }
         };
 
-        this.findViewById(R.id.buttonStartNewGame).setOnClickListener(onClickListenerStart);
-        this.findViewById(R.id.buttonStartNewGame).setEnabled(false);
+        buttonStartNewGame = findViewById(R.id.buttonStartNewGame);
+        buttonStartNewGame.setOnClickListener(onClickListenerStart);
         text = findViewById(R.id.textView1);
 
     }
@@ -64,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
         public void handleMessage(Message message) {
             if (message.what == Constants.CONNECTION_ON) {
                 progressBarScan.setVisibility(ProgressBar.INVISIBLE);
-                findViewById(R.id.buttonStartNewGame).setEnabled(true);
+                buttonStartNewGame.setEnabled(true);
                 text.setText("Connection established!");
             }
         }
@@ -73,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
     public void onResume() {
         super.onResume();
         api = Api.getApi(this, new DataListener() {
+            //Получение экзмепляра класса Api с переопределение его методов для получения слушателей
             @Nullable
             @Override
             public ConnectedListener getConnectedListener() {
@@ -95,7 +97,9 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
             @Nullable
             @Override
-            public RawListener getRawListener() { return null; }
+            public RawListener getRawListener() {
+                return null;
+            }
 
 
             @Override
@@ -103,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                 RotateListener rotateListener = new RotateListener() {
                     @Override
                     public void onRotateRight() {
-                        Intent intent=new Intent(MainActivity.this, GameActivity.class);
+                        Intent intent = new Intent(MainActivity.this, GameActivity.class);
                         startActivity(intent);
 
                     }
@@ -168,8 +172,6 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
                 return null;
             }
         });
-
-
     }
 
     @Override
