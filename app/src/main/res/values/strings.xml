@@ -4,6 +4,6 @@
     <string name="textRotate">Повернуть</string>
     <string name="textRight">Вправо</string>
     <string name="textLeft">Влево</string>
-    <string name="new_game">New Game</string>
-    <string name="scan_connect">Scanning for Movesense devices nearby</string>
+    <string name="new_game">Новая игра</string>
+    <string name="scan_connect">Поиск устройств Movesense</string>
 </resources>

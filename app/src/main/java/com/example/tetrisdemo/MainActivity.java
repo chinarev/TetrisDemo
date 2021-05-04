@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
             if (message.what == Constants.CONNECTION_ON) {
                 progressBarScan.setVisibility(ProgressBar.INVISIBLE);
                 buttonStartNewGame.setEnabled(true);
-                text.setText("Connection established!");
+                text.setText("Соединение установлено!");
             }
         }
     };
