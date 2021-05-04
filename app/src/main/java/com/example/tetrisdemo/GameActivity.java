@@ -372,12 +372,12 @@ public class GameActivity extends AppCompatActivity {
                         //mass_x_with_lowFilter = lowPass2(mass_x, mass_x_with_lowFilter);
                         System.out.println("X: " + mass_x);
                         //System.out.println("x_filter: " + mass_x_with_lowFilter);
-                        if (mass_x.get(count_speed) > 30) {
-                            moveRight();
-                        }
-                        if (mass_x.get(count_speed) < -30) {
-                            moveLeft();
-                        }
+//                        if (mass_x.get(count_speed) > 30) {
+//                            moveRight();
+//                        }
+//                        if (mass_x.get(count_speed) < -30) {
+//                            moveLeft();
+//                        }
                         //}
 
 
