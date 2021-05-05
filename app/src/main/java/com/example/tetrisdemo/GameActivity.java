@@ -128,9 +128,7 @@ public class GameActivity extends AppCompatActivity {
                 case Constants.START:
                     GameActivity.this.generateNextBlock();
                     GameActivity.this.pushNextBlock();
-                    System.out.println("START BEFOR TIMER");
                     GameActivity.this.setTimer();
-                    System.out.println("START");
                     break;
 
                 case Constants.DEFAULT_DOWN:
@@ -146,16 +144,11 @@ public class GameActivity extends AppCompatActivity {
 
                         if (GameActivity.this.drawView.checkGameOver(GameActivity.this.nextBlockView.getType())) {
                             GameActivity.this.reset();
-                        }
-
-                        if (GameActivity.this.drawView.checkGameOver(GameActivity.this.nextBlockView.getType())) {
-                            GameActivity.this.reset();
                         } else {
                             GameActivity.this.pushNextBlock();
                             GameActivity.this.setTimer();
                         }
                     }
-                    System.out.println("DOWN");
                     break;
 
                 case Constants.LEFT:
@@ -190,7 +183,6 @@ public class GameActivity extends AppCompatActivity {
                     GameActivity.this.gameOver();
                     GameActivity.this.currentScore = 0;
                     GameActivity.this.curr_score_view.setText("0");
-                    System.out.println("RESET");
                     break;
 
                 case Constants.RESET_BOARD:
@@ -224,7 +216,6 @@ public class GameActivity extends AppCompatActivity {
                 System.gc();
             }
         }, 1000, 400);
-        System.out.println("SET TIMER");
     }
 
     private void gameOver() {
@@ -321,7 +312,6 @@ public class GameActivity extends AppCompatActivity {
                             progressBarSensors.setVisibility(ProgressBar.INVISIBLE);
                             runGame();
                         }
-                        System.out.println("ON CONNECTED GAME");
                     }
                 };
                 return connectedListener;
