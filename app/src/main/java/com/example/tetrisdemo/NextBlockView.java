@@ -11,7 +11,7 @@ import android.os.Message;
 import android.util.AttributeSet;
 import android.view.View;
 
-public class NewBlockView extends View {
+public class NextBlockView extends View {
     private final Paint paint = new Paint();
     private float curr_width;
     private float curr_height;
@@ -22,20 +22,20 @@ public class NewBlockView extends View {
     private final Handler handler =new Handler(Looper.myLooper()) {
         public void handleMessage(Message message) {
             if (message.what == Constants.DRAW_BLOCK) {
-                NewBlockView.this.invalidate();
+                NextBlockView.this.invalidate();
             }
         }
     };
 
-    public NewBlockView(Context context) {
+    public NextBlockView(Context context) {
         super(context);
     }
 
-    public NewBlockView(Context context, AttributeSet a) {
+    public NextBlockView(Context context, AttributeSet a) {
         super(context, a);
     }
 
-    public NewBlockView(Context context, AttributeSet a, int b) {
+    public NextBlockView(Context context, AttributeSet a, int b) {
         super(context, a, b);
     }
 
@@ -82,11 +82,11 @@ public class NewBlockView extends View {
         switch (nextBlockType) {
             case 0:
                 new Thread(() -> {
-                    NewBlockView.this.field = new boolean[][]{
+                    NextBlockView.this.field = new boolean[][]{
                             {true, true, false, false},
                             {true, true, false, false}
                     };
-                    NewBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
+                    NextBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
                 }).start();
 
                 break;
@@ -95,11 +95,11 @@ public class NewBlockView extends View {
                 this.type = 1;
 
                 new Thread(() -> {
-                    NewBlockView.this.field = new boolean[][]{
+                    NextBlockView.this.field = new boolean[][]{
                             {false, false, true, false},
                             {true, true, true, false}
                     };
-                    NewBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
+                    NextBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
                 }).start();
 
                 break;
@@ -108,11 +108,11 @@ public class NewBlockView extends View {
                 this.type = 2;
 
                 new Thread(() -> {
-                    NewBlockView.this.field = new boolean[][]{
+                    NextBlockView.this.field = new boolean[][]{
                             {true, false, false, false},
                             {true, true, true, false}
                     };
-                    NewBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
+                    NextBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
                 }).start();
 
                 break;
@@ -121,11 +121,11 @@ public class NewBlockView extends View {
                 this.type = 3;
 
                 new Thread(() -> {
-                    NewBlockView.this.field = new boolean[][]{
+                    NextBlockView.this.field = new boolean[][]{
                             {false, true, true, false},
                             {true, true, false, false}
                     };
-                    NewBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
+                    NextBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
                 }).start();
 
                 break;
@@ -134,11 +134,11 @@ public class NewBlockView extends View {
                 this.type = 4;
 
                 new Thread(() -> {
-                    NewBlockView.this.field = new boolean[][]{
+                    NextBlockView.this.field = new boolean[][]{
                             {true, true, false, false},
                             {false, true, true, false}
                     };
-                    NewBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
+                    NextBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
                 }).start();
 
                 break;
@@ -147,11 +147,11 @@ public class NewBlockView extends View {
                 this.type = 5;
 
                 new Thread(() -> {
-                    NewBlockView.this.field = new boolean[][]{
+                    NextBlockView.this.field = new boolean[][]{
                             {false, false, false, false},
                             {true, true, true, true}
                     };
-                    NewBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
+                    NextBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
                 }).start();
 
                 break;
@@ -160,12 +160,12 @@ public class NewBlockView extends View {
                 this.type = 6;
 
                 new Thread(() -> {
-                    NewBlockView.this.field = new boolean[][]{
+                    NextBlockView.this.field = new boolean[][]{
                             {false, true, false, false},
                             {true, true, true, false}
                     };
 
-                    NewBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
+                    NextBlockView.this.handler.sendEmptyMessage(Constants.DRAW_BLOCK);
                 }).start();
                 break;
 

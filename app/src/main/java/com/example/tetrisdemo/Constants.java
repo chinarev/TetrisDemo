@@ -10,8 +10,6 @@ public class Constants {
     public static final int DETECT_FULL_ROW = 6;
     public static final int ROTATE = 7;
     public static final int FAST_DOWN = 8;
-
-    public static final int DRAW_BLOCK = 1;
-
-    public static final int CONNECTION_ON = 6;
+    public static final int DRAW_BLOCK = 9;
+    public static final int CONNECTION_ON = 10;
 }

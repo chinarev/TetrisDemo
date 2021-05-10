@@ -15,7 +15,7 @@ class DrawView extends View {
     Board board = new Board();
     private float curr_width;
     private float curr_height;
-    private final boolean[][] field = new boolean[board.rows][board.cols];
+    private final boolean[][] field = new boolean[board.getRows()][board.getCols()];
 
     private int currentX;
     private int currentY;
@@ -280,7 +280,7 @@ class DrawView extends View {
         }
     }
 
-    public int checkRowsCollision() {
+    public int checkRows() {
         int count = 0;
         while (cleanRow()) {
             count++;

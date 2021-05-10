@@ -1,6 +1,5 @@
 package com.example.tetrisdemo;
 
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -39,7 +38,7 @@ public class GameActivity extends AppCompatActivity {
 
     Api api;
     private DrawView drawView;
-    private NewBlockView nextBlockView;
+    private NextBlockView nextBlockView;
     private Timer timer;
     private int currentScore = 0;
     private TextView curr_score_view;
@@ -105,12 +104,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void moveDown() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                GameActivity.this.mHandler.sendEmptyMessage(Constants.FAST_DOWN);
-            }
-        }).start();
+        new Thread(() -> GameActivity.this.mHandler.sendEmptyMessage(Constants.FAST_DOWN)).start();
     }
 
     private void rotate() {
@@ -119,6 +113,7 @@ public class GameActivity extends AppCompatActivity {
 
     private void reset() {
         new Thread(() -> GameActivity.this.mHandler.sendEmptyMessage(Constants.RESET)).start();
+
     }
 
     private final Handler mHandler = new Handler(Looper.myLooper()) {
@@ -135,7 +130,7 @@ public class GameActivity extends AppCompatActivity {
                     if (GameActivity.this.drawView.checkDownCollision()) {
                         GameActivity.this.drawView.fallDown();
                     } else {
-                        int count = GameActivity.this.drawView.checkRowsCollision();
+                        int count = GameActivity.this.drawView.checkRows();
                         GameActivity.this.currentScore += count * 100;
                         GameActivity.this.curr_score_view.setText(Integer.toString(GameActivity.this.currentScore));
 
@@ -173,7 +168,7 @@ public class GameActivity extends AppCompatActivity {
                     if (GameActivity.this.drawView.checkDownCollision()) {
                         GameActivity.this.drawView.fallDown();
                     } else {
-                        GameActivity.this.drawView.checkRowsCollision();
+                        GameActivity.this.drawView.checkRows();
                     }
                     break;
 
@@ -245,9 +240,8 @@ public class GameActivity extends AppCompatActivity {
         }, 0, 200);
     }
 
-    static final float ALPHA = 0.2f;
+    static final double ALPHA = 0.2;
 
-    int count = 0;
     double[] vel_input_x = new double[1_000_000];
     double[] vel_out_x = new double[1_000_000];
     double[] vel_input_z = new double[1_000_000];
@@ -258,45 +252,38 @@ public class GameActivity extends AppCompatActivity {
 
         for (int i = 0; i < input.length; i++) {
             output[i] = output[i] + ALPHA * (input[i] - output[i]);
-            //output.add(i, (output.get(i) + ALPHA * (input.get(i) - output.get(i))));
         }
         return output;
     }
 
-    protected ArrayList<Double> lowPass2(ArrayList<Double> input, ArrayList<Double> output) {
-        if (output == null) return input;
-
-        for (int i = 0; i < input.size(); i++) {
-            //output[i] = output[i] + ALPHA * (input[i] - output[i]);
-            output.add(i, (output.get(i) + ALPHA * (input.get(i) - output.get(i))));
-        }
-        return output;
-    }
-
-    double bias;
-    boolean wasRotated = false;
-    boolean wasMoved = false;
-
-    double initial_speed = 0;
-    double new_speed = 0;
-    ArrayList<Long> arr_time = new ArrayList<>();
-    long time;
+    double initial_speed_x = 0;
+    double new_speed_x = 0;
+    double initial_speed_z = 0;
+    double new_speed_z = 0;
     int count_speed = 0;
-    double[] acc_x = new double[1_000_000];
-    double[] acc_x_with_Kalman = new double[1_000_000];
-    double acc;
-    //double[] initial_x = new double[1_000_000];
-    //double[] new_x = new double[1_000_000];
+    int count = 0;
+
     double initial_x = 0;
     double new_x = 0;
-    //ArrayList<Double> initial_x = new ArrayList<>();
-    //ArrayList<Double> new_x = new ArrayList<>();
+    double initial_z = 0;
+    double new_z = 0;
+
     double dx;
+    double dz;
     long dt = 0;
 
+    private static final double rtd = 180 / Math.PI;
+    double ftd;
+    double std;
+    long time_first;
+
     ArrayList<Double> mass_x = new ArrayList<>();
-    ArrayList<Double> mass_x_with_lowFilter = new ArrayList<>();
+    ArrayList<Double> mass_z = new ArrayList<>();
+
     boolean sensorsReady = false;
+    boolean wasMoved = false;
+    boolean wasRotated = false;
+    double time_1 = 0;
 
     public void onResume() {
         super.onResume();
@@ -330,95 +317,96 @@ public class GameActivity extends AppCompatActivity {
                 RawListener rawListener = new RawListener() {
                     @Override
                     public void onGetAcc(@NotNull Coordinates coordinates) {
-                        time = 0;
-                        if (coordinates.getX() != 0) {
-                            sensorsReady = true;
-                        }
 
-                        arr_time.add(System.currentTimeMillis());
-                        if (count_speed == 0) mass_x_with_lowFilter.add(0.0);
-
-                        //if (dt != 0) {
-                        initial_speed = new_speed;
-                        //acc_x.add(coordinates.getX());
-                        acc_x[count_speed] = coordinates.getX();
-                        acc_x_with_Kalman = lowPass(acc_x, acc_x_with_Kalman);
-                        System.out.println("acc_x_with_Kalman : " + acc_x_with_Kalman[count_speed]);
-                        System.out.println("acc_x" + acc_x[count_speed]);
-                        new_speed = initial_speed + acc_x_with_Kalman[count_speed] * dt;
-                        //new_speed = initial_speed + coordinates.getX() * dt;
-
-                        System.out.println("initial speed: " + initial_speed);
-                        System.out.println("new speed: " + new_speed);
-                        System.out.println("time mass: " + arr_time);
-                        System.out.println("dt :" + dt);
-
-                        initial_x = new_x;
-                        dx = (initial_speed + new_speed) / 2 * dt;
-                        new_x = (initial_x + dx) / 1000;
-                        //new_x = (initial_x + dx);
-                        mass_x.add(new_x);
-
-                        //mass_x_with_lowFilter = lowPass2(mass_x, mass_x_with_lowFilter);
-                        System.out.println("X: " + mass_x);
-                        //System.out.println("x_filter: " + mass_x_with_lowFilter);
-//                        if (mass_x.get(count_speed) > 30) {
-//                            moveRight();
-//                        }
-//                        if (mass_x.get(count_speed) < -30) {
-//                            moveLeft();
-//                        }
-                        //}
-
-
-                        if (count_speed != 0) {
-                            dt = arr_time.get(count_speed) - arr_time.get(count_speed - 1);
-                        }
-
-                        count_speed++;
-
-
-                        bias = Math.atan((coordinates.getZ() * (-1)) / (Math.sqrt(Math.pow(coordinates.getX(), 2) + Math.pow(coordinates.getY(), 2)))) * (180 / Math.PI);
-                        if (bias > 30 && !wasRotated) {
-                            rotate();
-                            wasRotated = true;
-                            return;
-                        }
-
-                        wasRotated = false;
                     }
 
                     @Override
                     public void onGetVel(@NotNull Coordinates coordinates) {
 
-                        vel_input_x[count] = coordinates.getX();
+                        if (coordinates.getX() != 0) {
+                            sensorsReady = true;
+                        }
+
+                        time_first = System.nanoTime();
+
+                        initial_speed_x = new_speed_x;
+                        new_speed_x = coordinates.getX();
+                        initial_speed_z = new_speed_z;
+                        new_speed_z = coordinates.getZ();
+                        dt = System.nanoTime() - time_first;
+
+                        vel_input_x[count_speed] = coordinates.getX();
                         vel_out_x = lowPass(vel_input_x, vel_out_x);
+                        vel_input_z[count_speed] = coordinates.getZ();
+                        //vel_out_z = lowPass(vel_input_z, vel_out_z);
+                        vel_out_z = vel_input_x;
 
-                        if (vel_out_x[count] > 2 && !wasMoved) {
+                        //find x offset
+                        initial_x = new_x;
+                        dx = (initial_speed_x + vel_out_x[count_speed]) / 2 * dt;
+                        new_x = (initial_x + dx) / 1000;
+                        mass_x.add(new_x);
+
+                        //find z offset
+                        initial_z = new_z;
+                        dz = (initial_speed_z + vel_out_z[count_speed]) / 2 * dt;
+                        new_z = (initial_z + dz) / 1000;
+                        mass_z.add(new_z);
+
+                        if (mass_x.get(count_speed) > 25) {
                             moveLeft();
-                            wasMoved = true;
-                            return;
                         }
 
-                        if (vel_out_x[count] < -2 && !wasMoved) {
+                        if (mass_x.get(count_speed) < -25) {
                             moveRight();
-                            wasMoved = true;
-                            return;
                         }
 
-                        wasMoved = false;
-
-                        if (vel_out_z[count] < -10) {
+                        if (mass_z.get(count_speed) < -80) {
                             rotate();
                         }
 
-//                        if (count != 0) {
-//                            time_1 = (vel_input_z[count] - vel_input_z[count - 1]) / acc_storage_X.get(count);
-//                            S = vel_input_z[count] * time_1 + 0.5 * acc_storage_X.get(count) * time_1 * time_1;
-//                            arr_S.add(S);
-//                        }
+                        if (mass_z.get(count_speed) > 80) {
+                            moveDown();
+                        }
 
-                        count++;
+                        count_speed++;
+
+                        //option with checking speed instead of offset
+
+//                        vel_input_x[count] = coordinates.getX();
+//                        vel_out_x = lowPass(vel_input_x, vel_out_x);
+//
+//                        if (vel_out_x[count] > 2 && !wasMoved) {
+//                            moveLeft();
+//                            wasMoved = true;
+//                            return;
+//                        }
+//
+//                        if (vel_out_x[count] < -2 && !wasMoved) {
+//                            moveRight();
+//                            wasMoved = true;
+//                            return;
+//                        }
+//
+//                        wasMoved = false;
+//
+//                        vel_input_z[count] = coordinates.getZ();
+//                        vel_out_z = lowPass(vel_input_z, vel_out_z);
+//
+//                        if (vel_out_z[count] < -2 && !wasRotated && vel_out_x[count] < 1 && vel_out_x[count] > -1) {
+//                            rotate();
+//                            wasRotated = true;
+//                            return;
+//                        }
+//
+//                        if (vel_out_z[count] > 2 && !wasRotated && vel_out_x[count] < 1 && vel_out_x[count] > -1) {
+//                            moveDown();
+//                            wasRotated = true;
+//                            return;
+//                        }
+//
+//
+//                        count++;
 
 
                     }
@@ -432,21 +420,22 @@ public class GameActivity extends AppCompatActivity {
                 RotateListener rotateListener = new RotateListener() {
                     @Override
                     public void onRotateRight() {
+                        //moveRight();
                     }
 
                     @Override
                     public void onRotateLeft() {
-
+                        //moveLeft();
                     }
 
                     @Override
                     public void onRotateDown() {
-
+                        //moveDown();
                     }
 
                     @Override
                     public void onRotateUp() {
-
+                        //rotate();
                     }
                 };
                 return null;
@@ -470,20 +459,22 @@ public class GameActivity extends AppCompatActivity {
                 SideListener sideListener = new SideListener() {
                     @Override
                     public void onGetRight() {
+                        //moveRight();
                     }
 
                     @Override
                     public void onGetLeft() {
+                        //moveLeft();
                     }
 
                     @Override
                     public void onGetUp() {
-
+                        //rotate();
                     }
 
                     @Override
                     public void onGetDown() {
-
+                        //moveDown();
                     }
                 };
                 return null;

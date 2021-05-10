@@ -48,7 +48,7 @@
                 android:gravity="center"
                 android:text="0" />
 
-            <com.example.tetrisdemo.NewBlockView
+            <com.example.tetrisdemo.NextBlockView
                 android:id="@+id/next_block"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />

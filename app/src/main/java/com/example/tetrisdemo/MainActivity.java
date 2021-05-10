@@ -114,7 +114,8 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
 
                     @Override
                     public void onRotateLeft() {
-
+                        Intent intent = new Intent(MainActivity.this, GameActivity.class);
+                        startActivity(intent);
                     }
 
                     @Override
