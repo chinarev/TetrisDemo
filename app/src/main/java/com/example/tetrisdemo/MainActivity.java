@@ -31,7 +31,7 @@ import com.softwarecountry.movesensegamelib.listeners.SideProgressListener;
 
 import org.jetbrains.annotations.Nullable;
 
-public class MainActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
+public class MainActivity extends AppCompatActivity  {
 
     private Api api;
     private ProgressBar progressBarScan;

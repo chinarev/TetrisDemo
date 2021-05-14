@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.softwarecountry.movesensegamelib.Api;
@@ -29,7 +28,6 @@ import com.softwarecountry.movesensegamelib.listeners.SideProgressListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -41,7 +39,7 @@ public class GameActivity extends AppCompatActivity {
     private NextBlockView nextBlockView;
     private Timer timer;
     private int currentScore = 0;
-    private TextView curr_score_view;
+    private TextView currScoreView;
     private ProgressBar progressBarSensors;
 
     @Override
@@ -54,7 +52,7 @@ public class GameActivity extends AppCompatActivity {
 
         this.drawView = findViewById(R.id.game_activity);
         this.nextBlockView = findViewById(R.id.next_block);
-        this.curr_score_view = findViewById(R.id.curr_score_view);
+        this.currScoreView = findViewById(R.id.curr_score_view);
 
         View.OnClickListener onClickListenerLeft = new View.OnClickListener() {
             @Override
@@ -132,7 +130,7 @@ public class GameActivity extends AppCompatActivity {
                     } else {
                         int count = GameActivity.this.drawView.checkRows();
                         GameActivity.this.currentScore += count * 100;
-                        GameActivity.this.curr_score_view.setText(Integer.toString(GameActivity.this.currentScore));
+                        GameActivity.this.currScoreView.setText(Integer.toString(GameActivity.this.currentScore));
 
                         GameActivity.this.timer.cancel();
                         GameActivity.this.timer.purge();
@@ -177,7 +175,7 @@ public class GameActivity extends AppCompatActivity {
                     GameActivity.this.timer.purge();
                     GameActivity.this.gameOver();
                     GameActivity.this.currentScore = 0;
-                    GameActivity.this.curr_score_view.setText("0");
+                    GameActivity.this.currScoreView.setText("0");
                     break;
 
                 case Constants.RESET_BOARD:
@@ -210,7 +208,7 @@ public class GameActivity extends AppCompatActivity {
                 GameActivity.this.mHandler.sendEmptyMessage(Constants.DEFAULT_DOWN);
                 System.gc();
             }
-        }, 1000, 400);
+        }, 1000, 500);
     }
 
     private void gameOver() {
@@ -237,53 +235,51 @@ public class GameActivity extends AppCompatActivity {
                     runGame();
                 }
             }
-        }, 0, 200);
+        }, 0, 100);
     }
 
-    static final double ALPHA = 0.2;
 
-    double[] vel_input_x = new double[1_000_000];
-    double[] vel_out_x = new double[1_000_000];
-    double[] vel_input_z = new double[1_000_000];
-    double[] vel_out_z = new double[1_000_000];
+
+    double[] velInputX = new double[1_000_000];
+    double[] velOutputX = new double[1_000_000];
+    double[] velInputZ = new double[1_000_000];
+    double[] velOutputZ = new double[1_000_000];
 
     protected double[] lowPass(double[] input, double[] output) {
         if (output == null) return input;
 
         for (int i = 0; i < input.length; i++) {
-            output[i] = output[i] + ALPHA * (input[i] - output[i]);
+            output[i] = output[i] + Constants.ALPHA * (input[i] - output[i]);
         }
         return output;
     }
 
-    double initial_speed_x = 0;
-    double new_speed_x = 0;
-    double initial_speed_z = 0;
-    double new_speed_z = 0;
-    int count_speed = 0;
-    int count = 0;
+    double initialSpeedX = 0;
+    double newSpeedX = 0;
+    double initialSpeedZ = 0;
+    double newSpeedZ = 0;
+    int countSpeed = 0;
 
-    double initial_x = 0;
-    double new_x = 0;
-    double initial_z = 0;
-    double new_z = 0;
-
+    double newX = 0;
+    double newZ = 0;
+    double offsetOnX;
+    double offsetOnZ;
+    double initialOffestCoord;
     double dx;
-    double dz;
     long dt = 0;
 
-    private static final double rtd = 180 / Math.PI;
     double ftd;
     double std;
-    long time_first;
-
-    ArrayList<Double> mass_x = new ArrayList<>();
-    ArrayList<Double> mass_z = new ArrayList<>();
+    long timeFirst;
 
     boolean sensorsReady = false;
-    boolean wasMoved = false;
-    boolean wasRotated = false;
-    double time_1 = 0;
+
+    public double findOffset(double newOffsetCoordinate, double initialSpeed, double[] speedOut, int speedCount) {
+        initialOffestCoord = newOffsetCoordinate;
+        dx = (initialSpeed + speedOut[speedCount]) / 2 * dt;
+        newOffsetCoordinate = (initialOffestCoord + dx) / 1000;
+        return newOffsetCoordinate;
+    }
 
     public void onResume() {
         super.onResume();
@@ -318,6 +314,9 @@ public class GameActivity extends AppCompatActivity {
                     @Override
                     public void onGetAcc(@NotNull Coordinates coordinates) {
 
+                        ftd = Math.atan((coordinates.getZ() * (-1)) / (Math.sqrt(Math.pow(coordinates.getX(), 2) + Math.pow(coordinates.getY(), 2)))) * Constants.rtd;
+                        std = Math.atan(coordinates.getX() / coordinates.getY()) * Constants.rtd;
+
                     }
 
                     @Override
@@ -327,49 +326,54 @@ public class GameActivity extends AppCompatActivity {
                             sensorsReady = true;
                         }
 
-                        time_first = System.nanoTime();
+                        timeFirst = System.nanoTime();
 
-                        initial_speed_x = new_speed_x;
-                        new_speed_x = coordinates.getX();
-                        initial_speed_z = new_speed_z;
-                        new_speed_z = coordinates.getZ();
-                        dt = System.nanoTime() - time_first;
+                        initialSpeedX = newSpeedX;
+                        newSpeedX = coordinates.getX();
+                        initialSpeedZ = newSpeedZ;
+                        newSpeedZ = coordinates.getZ();
+                        dt = System.nanoTime() - timeFirst;
 
-                        vel_input_x[count_speed] = coordinates.getX();
-                        vel_out_x = lowPass(vel_input_x, vel_out_x);
-                        vel_input_z[count_speed] = coordinates.getZ();
+                        velInputX[countSpeed] = coordinates.getX();
+                        velOutputX = lowPass(velInputX, velOutputX);
+                        //vel_out_x = vel_input_x
+                        velInputZ[countSpeed] = coordinates.getZ();
                         //vel_out_z = lowPass(vel_input_z, vel_out_z);
-                        vel_out_z = vel_input_x;
+                        velOutputZ = velInputZ;
 
-                        //find x offset
-                        initial_x = new_x;
-                        dx = (initial_speed_x + vel_out_x[count_speed]) / 2 * dt;
-                        new_x = (initial_x + dx) / 1000;
-                        mass_x.add(new_x);
+                       // find x offset
+//                        initial_x = new_x;
+//                        dx = (initial_speed_x + vel_out_x[count_speed]) / 2 * dt;
+//                        new_x = (initial_x + dx) / 1000;
+//                        mass_x.add(new_x);
+
+                        offsetOnX = findOffset(newX, initialSpeedX, velOutputX, countSpeed);
+                        offsetOnZ = findOffset(newZ, initialSpeedZ, velOutputZ, countSpeed);
 
                         //find z offset
-                        initial_z = new_z;
-                        dz = (initial_speed_z + vel_out_z[count_speed]) / 2 * dt;
-                        new_z = (initial_z + dz) / 1000;
-                        mass_z.add(new_z);
+//                        initial_z = new_z;
+//                        dz = (initial_speed_z + vel_out_z[count_speed]) / 2 * dt;
+//                        new_z = (initial_z + dz) / 1000;
+//                        mass_z.add(new_z);
+                        //System.out.println("speed: " + mass_x.get(count_speed));
 
-                        if (mass_x.get(count_speed) > 25) {
+                        if (offsetOnX > 15 && std < 0 ) {
                             moveLeft();
                         }
 
-                        if (mass_x.get(count_speed) < -25) {
+                        if (offsetOnX < -15 && std > 0 ) {
                             moveRight();
                         }
 
-                        if (mass_z.get(count_speed) < -80) {
+                        if (offsetOnZ < -10 && ftd < -5) {
                             rotate();
                         }
 
-                        if (mass_z.get(count_speed) > 80) {
+                        if (offsetOnZ > 30 && ftd > 20) {
                             moveDown();
                         }
 
-                        count_speed++;
+                        countSpeed++;
 
                         //option with checking speed instead of offset
 
@@ -508,11 +512,11 @@ public class GameActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        api.onRequestPermissionsResult(requestCode, grantResults);
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        api.onRequestPermissionsResult(requestCode, grantResults);
+//    }
 
     @Override
     public void onPause() {
