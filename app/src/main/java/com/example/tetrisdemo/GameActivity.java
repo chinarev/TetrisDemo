@@ -343,12 +343,12 @@ public class GameActivity extends AppCompatActivity {
                         offsetOnX = findOffset(newX, initialSpeedX, velOutputX, countSpeed);
                         offsetOnZ = findOffset(newZ, initialSpeedZ, velOutputZ, countSpeed);
 
-                        if (offsetOnX > 15 && std < -2 && (System.currentTimeMillis() - timeMoved > 200)) {
+                        if (offsetOnX > 15 && std < 0 && (System.currentTimeMillis() - timeMoved > 200)) {
                             moveLeft();
                             timeMoved = System.currentTimeMillis();
                         }
 
-                        if (offsetOnX < -15 && std > 2 && (System.currentTimeMillis() - timeMoved > 200)) {
+                        if (offsetOnX < -15 && std > 0 && (System.currentTimeMillis() - timeMoved > 200)) {
                             moveRight();
                             timeMoved = System.currentTimeMillis();
                         }
