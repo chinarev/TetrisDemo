@@ -239,7 +239,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
 
-
+    public static final double ALPHA = 0.2;
     double[] velInputX = new double[1_000_000];
     double[] velOutputX = new double[1_000_000];
     double[] velInputZ = new double[1_000_000];
@@ -249,7 +249,7 @@ public class GameActivity extends AppCompatActivity {
         if (output == null) return input;
 
         for (int i = 0; i < input.length; i++) {
-            output[i] = output[i] + Constants.ALPHA * (input[i] - output[i]);
+            output[i] = output[i] + ALPHA * (input[i] - output[i]);
         }
         return output;
     }
@@ -271,7 +271,7 @@ public class GameActivity extends AppCompatActivity {
     double ftd;
     double std;
     long timeFirst;
-
+    long timeRotated = 0;
     boolean sensorsReady = false;
 
     public double findOffset(double newOffsetCoordinate, double initialSpeed, double[] speedOut, int speedCount) {
@@ -336,81 +336,30 @@ public class GameActivity extends AppCompatActivity {
 
                         velInputX[countSpeed] = coordinates.getX();
                         velOutputX = lowPass(velInputX, velOutputX);
-                        //vel_out_x = vel_input_x
                         velInputZ[countSpeed] = coordinates.getZ();
-                        //vel_out_z = lowPass(vel_input_z, vel_out_z);
                         velOutputZ = velInputZ;
-
-                       // find x offset
-//                        initial_x = new_x;
-//                        dx = (initial_speed_x + vel_out_x[count_speed]) / 2 * dt;
-//                        new_x = (initial_x + dx) / 1000;
-//                        mass_x.add(new_x);
 
                         offsetOnX = findOffset(newX, initialSpeedX, velOutputX, countSpeed);
                         offsetOnZ = findOffset(newZ, initialSpeedZ, velOutputZ, countSpeed);
 
-                        //find z offset
-//                        initial_z = new_z;
-//                        dz = (initial_speed_z + vel_out_z[count_speed]) / 2 * dt;
-//                        new_z = (initial_z + dz) / 1000;
-//                        mass_z.add(new_z);
-                        //System.out.println("speed: " + mass_x.get(count_speed));
-
-                        if (offsetOnX > 15 && std < 0 ) {
+                        if (offsetOnX > 5 && std < -2) {
                             moveLeft();
                         }
 
-                        if (offsetOnX < -15 && std > 0 ) {
+                        if (offsetOnX < -5 && std > 2) {
                             moveRight();
                         }
 
-                        if (offsetOnZ < -10 && ftd < -5) {
+                        if (offsetOnZ < -10 && ftd < -10 && (System.currentTimeMillis() - timeRotated > 1000)) {
                             rotate();
+                            timeRotated = System.currentTimeMillis();
                         }
 
-                        if (offsetOnZ > 30 && ftd > 20) {
+                        if (offsetOnZ > 15 && ftd > 25) {
                             moveDown();
                         }
 
                         countSpeed++;
-
-                        //option with checking speed instead of offset
-
-//                        vel_input_x[count] = coordinates.getX();
-//                        vel_out_x = lowPass(vel_input_x, vel_out_x);
-//
-//                        if (vel_out_x[count] > 2 && !wasMoved) {
-//                            moveLeft();
-//                            wasMoved = true;
-//                            return;
-//                        }
-//
-//                        if (vel_out_x[count] < -2 && !wasMoved) {
-//                            moveRight();
-//                            wasMoved = true;
-//                            return;
-//                        }
-//
-//                        wasMoved = false;
-//
-//                        vel_input_z[count] = coordinates.getZ();
-//                        vel_out_z = lowPass(vel_input_z, vel_out_z);
-//
-//                        if (vel_out_z[count] < -2 && !wasRotated && vel_out_x[count] < 1 && vel_out_x[count] > -1) {
-//                            rotate();
-//                            wasRotated = true;
-//                            return;
-//                        }
-//
-//                        if (vel_out_z[count] > 2 && !wasRotated && vel_out_x[count] < 1 && vel_out_x[count] > -1) {
-//                            moveDown();
-//                            wasRotated = true;
-//                            return;
-//                        }
-//
-//
-//                        count++;
 
 
                     }
@@ -424,22 +373,18 @@ public class GameActivity extends AppCompatActivity {
                 RotateListener rotateListener = new RotateListener() {
                     @Override
                     public void onRotateRight() {
-                        //moveRight();
                     }
 
                     @Override
                     public void onRotateLeft() {
-                        //moveLeft();
                     }
 
                     @Override
                     public void onRotateDown() {
-                        //moveDown();
                     }
 
                     @Override
                     public void onRotateUp() {
-                        //rotate();
                     }
                 };
                 return null;
@@ -463,22 +408,18 @@ public class GameActivity extends AppCompatActivity {
                 SideListener sideListener = new SideListener() {
                     @Override
                     public void onGetRight() {
-                        //moveRight();
                     }
 
                     @Override
                     public void onGetLeft() {
-                        //moveLeft();
                     }
 
                     @Override
                     public void onGetUp() {
-                        //rotate();
                     }
 
                     @Override
                     public void onGetDown() {
-                        //moveDown();
                     }
                 };
                 return null;
