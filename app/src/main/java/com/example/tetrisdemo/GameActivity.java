@@ -272,6 +272,7 @@ public class GameActivity extends AppCompatActivity {
     double std;
     long timeFirst;
     long timeRotated = 0;
+    long timeMoved = 0;
     boolean sensorsReady = false;
 
     public double findOffset(double newOffsetCoordinate, double initialSpeed, double[] speedOut, int speedCount) {
@@ -342,12 +343,14 @@ public class GameActivity extends AppCompatActivity {
                         offsetOnX = findOffset(newX, initialSpeedX, velOutputX, countSpeed);
                         offsetOnZ = findOffset(newZ, initialSpeedZ, velOutputZ, countSpeed);
 
-                        if (offsetOnX > 5 && std < -2) {
+                        if (offsetOnX > 15 && std < -2 && (System.currentTimeMillis() - timeMoved > 200)) {
                             moveLeft();
+                            timeMoved = System.currentTimeMillis();
                         }
 
-                        if (offsetOnX < -5 && std > 2) {
+                        if (offsetOnX < -15 && std > 2 && (System.currentTimeMillis() - timeMoved > 200)) {
                             moveRight();
+                            timeMoved = System.currentTimeMillis();
                         }
 
                         if (offsetOnZ < -10 && ftd < -10 && (System.currentTimeMillis() - timeRotated > 1000)) {
