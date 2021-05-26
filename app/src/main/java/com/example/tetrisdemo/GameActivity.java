@@ -273,6 +273,8 @@ public class GameActivity extends AppCompatActivity {
     long timeFirst;
     long timeRotated = 0;
     long timeMoved = 0;
+    double initRotate = 0;
+    double currRotate = 0;
     boolean sensorsReady = false;
 
     public double findOffset(double newOffsetCoordinate, double initialSpeed, double[] speedOut, int speedCount) {
@@ -343,22 +345,25 @@ public class GameActivity extends AppCompatActivity {
                         offsetOnX = findOffset(newX, initialSpeedX, velOutputX, countSpeed);
                         offsetOnZ = findOffset(newZ, initialSpeedZ, velOutputZ, countSpeed);
 
-                        if (offsetOnX > 15 && std < 0 && (System.currentTimeMillis() - timeMoved > 150)) {
+                        if (offsetOnX > 5 && std < 0 && (System.currentTimeMillis() - timeMoved > 150)) {
                             moveLeft();
                             timeMoved = System.currentTimeMillis();
                         }
 
-                        if (offsetOnX < -15 && std > 0 && (System.currentTimeMillis() - timeMoved > 150)) {
+                        if (offsetOnX < -5 && std > 0 && (System.currentTimeMillis() - timeMoved > 150)) {
                             moveRight();
                             timeMoved = System.currentTimeMillis();
                         }
 
-                        if (offsetOnZ < -10 && ftd < -10 && (System.currentTimeMillis() - timeRotated > 800)) {
+                        initRotate = currRotate;
+                        currRotate = ftd;
+
+                        if (offsetOnZ < -10 && (currRotate - initRotate  < -5) && (ftd < -5) && (System.currentTimeMillis() - timeRotated > 1000)) {
                             rotate();
                             timeRotated = System.currentTimeMillis();
                         }
 
-                        if (offsetOnZ > 15 && ftd > 25) {
+                        if (offsetOnZ > 15 && (currRotate - initRotate  > 20)) {
                             moveDown();
                         }
 
@@ -376,21 +381,25 @@ public class GameActivity extends AppCompatActivity {
                 RotateListener rotateListener = new RotateListener() {
                     @Override
                     public void onRotateRight() {
+
                     }
 
                     @Override
                     public void onRotateLeft() {
+
                     }
 
                     @Override
                     public void onRotateDown() {
+                        moveDown();
                     }
 
                     @Override
                     public void onRotateUp() {
+
                     }
                 };
-                return null;
+                return rotateListener;
             }
 
             @Nullable
@@ -411,21 +420,25 @@ public class GameActivity extends AppCompatActivity {
                 SideListener sideListener = new SideListener() {
                     @Override
                     public void onGetRight() {
+
                     }
 
                     @Override
                     public void onGetLeft() {
+
                     }
 
                     @Override
                     public void onGetUp() {
+
                     }
 
                     @Override
                     public void onGetDown() {
+                        moveDown();
                     }
                 };
-                return null;
+                return sideListener;
             }
 
             @Nullable
