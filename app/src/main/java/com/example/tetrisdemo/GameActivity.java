@@ -208,7 +208,7 @@ public class GameActivity extends AppCompatActivity {
                 GameActivity.this.mHandler.sendEmptyMessage(Constants.DEFAULT_DOWN);
                 System.gc();
             }
-        }, 1000, 500);
+        }, 1000, 700);
     }
 
     private void gameOver() {
