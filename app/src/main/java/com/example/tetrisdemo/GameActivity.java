@@ -111,7 +111,6 @@ public class GameActivity extends AppCompatActivity {
 
     private void reset() {
         new Thread(() -> GameActivity.this.mHandler.sendEmptyMessage(Constants.RESET)).start();
-
     }
 
     private final Handler mHandler = new Handler(Looper.myLooper()) {
@@ -182,6 +181,14 @@ public class GameActivity extends AppCompatActivity {
                     GameActivity.this.drawView.reset();
                     break;
 
+                case Constants.CONNECTION_ON:
+
+                    progressBarSensors.setVisibility(ProgressBar.INVISIBLE);
+                    GameActivity.this.mHandler.sendEmptyMessage(Constants.RESET_BOARD);
+                    runGame();
+
+                    break;
+
                 default:
                     break;
             }
@@ -215,7 +222,6 @@ public class GameActivity extends AppCompatActivity {
         this.timer = new Timer();
         this.timer.scheduleAtFixedRate(new TimerTask() {
             int row = 19;
-
             @Override
             public void run() {
                 if (this.row >= 0) {
@@ -225,7 +231,6 @@ public class GameActivity extends AppCompatActivity {
                     bundle.putInt("row", row);
                     message.setData(bundle);
                     GameActivity.this.mHandler.sendMessage(message);
-
                     this.row--;
                 } else {
                     GameActivity.this.mHandler.sendEmptyMessage(Constants.RESET_BOARD);
@@ -295,8 +300,9 @@ public class GameActivity extends AppCompatActivity {
                     @Override
                     public void onConnected(boolean b) {
                         if (sensorsReady) {
-                            progressBarSensors.setVisibility(ProgressBar.INVISIBLE);
-                            runGame();
+                            new Thread(() -> {
+                                GameActivity.this.mHandler.sendEmptyMessage(Constants.CONNECTION_ON);
+                            }).start();
                         }
                     }
                 };
@@ -358,12 +364,12 @@ public class GameActivity extends AppCompatActivity {
                         initRotate = currRotate;
                         currRotate = ftd;
 
-                        if (offsetOnZ < -10 && (currRotate - initRotate  < -5) && (ftd < -5) && (System.currentTimeMillis() - timeRotated > 1000)) {
+                        if ((offsetOnZ < -10) && (currRotate - initRotate < -5) && (ftd < -5) && (System.currentTimeMillis() - timeRotated > 1000) && (countSpeed > 2)) {
                             rotate();
                             timeRotated = System.currentTimeMillis();
                         }
 
-                        if (offsetOnZ > 15 && (currRotate - initRotate  > 20)) {
+                        if ((offsetOnZ > 15) && (ftd > 30)) {
                             moveDown();
                         }
 
@@ -391,7 +397,7 @@ public class GameActivity extends AppCompatActivity {
 
                     @Override
                     public void onRotateDown() {
-                        moveDown();
+
                     }
 
                     @Override
@@ -399,7 +405,7 @@ public class GameActivity extends AppCompatActivity {
 
                     }
                 };
-                return rotateListener;
+                return null;
             }
 
             @Nullable
@@ -435,10 +441,10 @@ public class GameActivity extends AppCompatActivity {
 
                     @Override
                     public void onGetDown() {
-                        moveDown();
+
                     }
                 };
-                return sideListener;
+                return null;
             }
 
             @Nullable
