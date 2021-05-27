@@ -215,7 +215,7 @@ public class GameActivity extends AppCompatActivity {
                 GameActivity.this.mHandler.sendEmptyMessage(Constants.DEFAULT_DOWN);
                 System.gc();
             }
-        }, 1000, 700);
+        }, 1000, 600);
     }
 
     private void gameOver() {
@@ -351,12 +351,12 @@ public class GameActivity extends AppCompatActivity {
                         offsetOnX = findOffset(newX, initialSpeedX, velOutputX, countSpeed);
                         offsetOnZ = findOffset(newZ, initialSpeedZ, velOutputZ, countSpeed);
 
-                        if (offsetOnX > 5 && std < 0 && (System.currentTimeMillis() - timeMoved > 150)) {
+                        if (offsetOnX > 10 && std < 0 && (System.currentTimeMillis() - timeMoved > 200)) {
                             moveLeft();
                             timeMoved = System.currentTimeMillis();
                         }
 
-                        if (offsetOnX < -5 && std > 0 && (System.currentTimeMillis() - timeMoved > 150)) {
+                        if (offsetOnX < -5 && std > 0 && (System.currentTimeMillis() - timeMoved > 200)) {
                             moveRight();
                             timeMoved = System.currentTimeMillis();
                         }
@@ -364,12 +364,12 @@ public class GameActivity extends AppCompatActivity {
                         initRotate = currRotate;
                         currRotate = ftd;
 
-                        if ((offsetOnZ < -10) && (currRotate - initRotate < -5) && (ftd < -5) && (System.currentTimeMillis() - timeRotated > 1000) && (countSpeed > 2)) {
+                        if ((offsetOnZ < -10) && (currRotate - initRotate < -3) && (ftd < -3) && (System.currentTimeMillis() - timeRotated > 1000) && (countSpeed > 2)) {
                             rotate();
                             timeRotated = System.currentTimeMillis();
                         }
 
-                        if ((offsetOnZ > 15) && (ftd > 30)) {
+                        if ((offsetOnZ > 15) && (ftd > 20)) {
                             moveDown();
                         }
 
